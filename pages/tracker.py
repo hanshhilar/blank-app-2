@@ -1,27 +1,45 @@
 import streamlit as st
 import time
+from datetime import datetime
 
-st.set_page_config(page_title="Safety Tracker", page_icon="🛡️")
+# Matching your Wix Navy and Orange
+NAVY_BLUE = "#002060"
+ORANGE = "#FF8C00"
 
-# Matching your Wix Colors (Navy & Orange)
-st.markdown("""
+st.set_page_config(page_title="Item Safety Check", page_icon="🛡️")
+
+st.markdown(f"""
     <style>
-    .stApp { background-color: #002060; color: white; text-align: center; }
-    h1 { color: #FF8C00; }
+    .stApp {{ background-color: white; }}
+    h1, h3 {{ color: {NAVY_BLUE}; }}
+    .stButton>button {{
+        background-color: {ORANGE};
+        color: white;
+        border-radius: 25px;
+        width: 100%;
+        height: 3em;
+        font-weight: bold;
+    }}
     </style>
     """, unsafe_allow_value=True)
 
-st.title("🛡️ Item Safety Check")
-st.write("Scan confirmed. Your items are currently with you.")
+st.title("🛡️ Item Safety Verified")
+st.write("Scan successful. Your item is marked as **Present**.")
 
-# 30 Minute Safety Timer
+# Record the scan
+current_time = datetime.now().strftime("%I:%M %p")
+st.success(f"Verified at {current_time}")
+
+# Timer Logic
 st.divider()
-st.subheader("⏰ Time until next check-in:")
-placeholder = st.empty()
+st.subheader("⏰ Next Check-in")
+st.write("To ensure your belongings stay with you, please re-scan in:")
 
+# A 30-minute countdown for your commute
+countdown_placeholder = st.empty()
 for i in range(1800, 0, -1):
     mins, secs = divmod(i, 60)
-    placeholder.metric("Safe Window", f"{mins:02d}:{secs:02d}")
+    countdown_placeholder.metric("Time Remaining", f"{mins:02d}:{secs:02d}")
     time.sleep(1)
     if i == 1:
-        st.error("⚠️ ALERT: Check-in required! Ensure all items are present.")
+        st.error("⚠️ ALERT: Item not scanned in time! Check your surroundings.")
