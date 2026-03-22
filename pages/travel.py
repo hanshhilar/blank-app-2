@@ -3,13 +3,10 @@ import time
 
 st.set_page_config(page_title="Travel Checklist", layout="centered")
 
-# Using standard headers instead of custom CSS to avoid the TypeError
 st.title("🧳 Smart Travel Checklist")
-st.write("Ensuring you have everything before your journey starts.")
 
-# 1. Initialize the checklist
+# 1. Initialize the checklist in Session State
 if 'scanned_items' not in st.session_state:
-    # You can add more items here manually
     st.session_state.scanned_items = {
         "Passport": False,
         "Laptop": False,
@@ -17,52 +14,43 @@ if 'scanned_items' not in st.session_state:
         "Wallet": False
     }
 
-# 2. Simulation of scanning
-st.subheader("📷 Scan Your Items")
-scan_input = st.text_input("Simulate QR Scan (Type item name):", placeholder="e.g. Laptop")
+# 2. THE SCANNER LOGIC (Automatic Check)
+# This reads the URL: .../travel?check=Passport
+query_params = st.query_params
+check_item = query_params.get("check")
 
-if scan_input:
-    matched = False
-    # Normalize the input to check against our list
-    clean_input = scan_input.strip().capitalize()
+if check_item:
+    # Capitalize to match our dictionary keys
+    item_to_tick = check_item.strip().capitalize()
     
-    if clean_input in st.session_state.scanned_items:
-        st.session_state.scanned_items[clean_input] = True
-        st.success(f"✅ {clean_input} verified!")
-        matched = True
-        time.sleep(1)
-        st.rerun()
-    
-    if not matched and scan_input != "":
-        st.error(f"⚠️ Warning: '{scan_input}' is not on your travel list!")
+    if item_to_tick in st.session_state.scanned_items:
+        if not st.session_state.scanned_items[item_to_tick]:
+            st.session_state.scanned_items[item_to_tick] = True
+            st.success(f"✅ {item_to_tick} Scanned & Verified!")
+            time.sleep(1)
+            # Clear the URL parameter so it doesn't keep "scanning" on refresh
+            st.query_params.clear()
+            st.rerun()
 
-# 3. Visual Checklist
+# 3. Visual Checklist Display
 st.divider()
-st.subheader("Packing Progress")
-
-# This calculates how many items are done
 packed_count = sum(st.session_state.scanned_items.values())
 total_count = len(st.session_state.scanned_items)
 
-# Display a progress bar (Looks great for a project!)
 st.progress(packed_count / total_count)
 
-# Display each item with a status
 for item, is_packed in st.session_state.scanned_items.items():
     if is_packed:
-        st.write(f"🟢 **{item}** — Packed")
+        st.write(f"✅ **{item}** — Packed")
     else:
-        st.write(f"⚪ {item} — *Missing*")
+        st.write(f"❌ {item} — *Waiting for Scan*")
 
-# 4. Final Validation
+# 4. Final Alert
 if packed_count == total_count:
     st.balloons()
-    st.success("🎉 All items verified. Safe travels!")
-else:
-    remaining = total_count - packed_count
-    st.warning(f"🚨 You still have {remaining} item(s) to scan before leaving.")
+    st.success("🎉 All items verified. Safe travels to Kannur!")
 
-if st.button("Reset Checklist"):
+if st.button("Reset All Ticks"):
     for key in st.session_state.scanned_items:
         st.session_state.scanned_items[key] = False
     st.rerun()
