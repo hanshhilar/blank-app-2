@@ -32,7 +32,7 @@ with st.form("contact_form", clear_on_submit=True):
 
                 server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
                 # Use your 16-character App Password here
-                server.login("hanshhilar705@gmail.com", "your_app_password") 
+                server.login("hanshhilar705@gmail.com", "ituf bmzk xjba etlz") 
                 server.send_message(msg)
                 server.quit()
 
