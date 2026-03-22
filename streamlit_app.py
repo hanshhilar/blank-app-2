@@ -1,6 +1,8 @@
 import streamlit as st
 
-st.title("🎈 My new app")
-st.write(
-    "Let's start building! For help and inspiration, head over to [docs.streamlit.io](https://docs.streamlit.io/)."
-)
+st.set_page_config(page_title="QR Connect Dashboard", page_icon="🔗")
+
+st.title("🔗 QR Connect Manager")
+st.write("Welcome to your belongings management system.")
+
+st.info("Use the sidebar to navigate to the **Safety Tracker** for your commute.")
