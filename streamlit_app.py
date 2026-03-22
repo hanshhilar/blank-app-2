@@ -4,51 +4,39 @@ from io import BytesIO
 
 st.set_page_config(page_title="QR Connect Manager", page_icon="🔗")
 
-st.title("🔗 QR Connect: Tag Generator")
-st.write("Create a QR tag that lets finders email the owner instantly.")
+st.title("🔗 QR Connect: System Validator")
+st.write("Generate a QR code to demonstrate the system to your faculty.")
 
-# User Input Section
-col1, col2 = st.columns(2)
+# 1. Base URL of your Wix "Found Item" Page
+# Replace this with your actual Wix page link
+wix_found_page = "https://hanshhilar705.wixsite.com/qrconect/found-item"
 
-with col1:
-    owner_name = st.text_input("Owner Name:", "Hansh Hilar")
-    owner_email = st.text_input("Owner Email:", "hanshhilar705@gmail.com")
+# 2. Input Section
+st.subheader("Recipient Details")
+test_mode = st.toggle("Enable Teacher Test Mode")
 
-with col2:
-    item_name = st.text_input("Item Name (Optional):", "Laptop Bag")
-    subject = f"Found Item: {item_name}"
+if test_mode:
+    # Put your teacher's email here
+    recipient_email = st.text_input("Teacher's Email:", "teacher_email@vimaljyothi.ac.in")
+    st.info("💡 This QR will send the 'Found' alert directly to your teacher.")
+else:
+    recipient_email = st.text_input("Owner Email:", "hanshhilar705@gmail.com")
 
-# QR Type Selection
-st.divider()
-st.subheader("Choose QR Type")
-qr_type = st.radio(
-    "How should the finder contact you?",
-    ["Direct Email (Opens Mail App)", "Save Contact (vCard)"]
-)
-
-if st.button("Generate QR Code"):
-    # Create the data for the QR
-    if qr_type == "Direct Email (Opens Mail App)":
-        # mailto format: mailto:email@example.com?subject=SubjectText
-        data = f"mailto:{owner_email}?subject={subject.replace(' ', '%20')}"
-    else:
-        # vCard format for saving to contacts
-        data = f"BEGIN:VCARD\nVERSION:3.0\nFN:{owner_name}\nEMAIL:{owner_email}\nNOTE:Owner of {item_name}\nEND:VCARD"
-
-    # Generate the Image
-    qr_img = qrcode.make(data)
+if st.button("Generate Validation QR"):
+    # The Magic: Attaching the email to the URL
+    validation_link = f"{wix_found_page}?mail={recipient_email}"
     
-    # Process for Streamlit display
+    # Create the QR
+    qr_img = qrcode.make(validation_link)
     buf = BytesIO()
     qr_img.save(buf, format="PNG")
-    byte_im = buf.getvalue()
-
-    # Display Result
-    st.image(byte_im, width=250, caption=f"Scan to contact {owner_name}")
+    
+    st.image(buf.getvalue(), caption=f"Validation Link: {validation_link}")
+    
     st.download_button(
-        label="Download QR for Printing",
-        data=byte_im,
-        file_name=f"{owner_name}_tag.png",
+        label="Download QR for Faculty",
+        data=buf.getvalue(),
+        file_name="teacher_test_qr.png",
         mime="image/png"
     )
-    st.success("✅ QR Generated! Print this and attach it to your belongings.")
+    st.success(f"Done! When scanned, this QR will tell Wix to email {recipient_email}")
