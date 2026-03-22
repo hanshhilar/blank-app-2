@@ -1,45 +1,27 @@
 import streamlit as st
 import time
-from datetime import datetime
 
-# Matching your Wix Navy and Orange
-NAVY_BLUE = "#002060"
-ORANGE = "#FF8C00"
+# This hides the sidebar and the "Made with Streamlit" footer
+st.set_page_config(page_title="Safety Tracker", initial_sidebar_state="collapsed")
 
-st.set_page_config(page_title="Item Safety Check", page_icon="🛡️")
-
-st.markdown(f"""
+st.markdown("""
     <style>
-    .stApp {{ background-color: white; }}
-    h1, h3 {{ color: {NAVY_BLUE}; }}
-    .stButton>button {{
-        background-color: {ORANGE};
-        color: white;
-        border-radius: 25px;
-        width: 100%;
-        height: 3em;
-        font-weight: bold;
-    }}
+    [data-testid="stSidebar"] { display: none; }
+    .stApp { background-color: #002060; color: white; text-align: center; }
+    h1 { color: #FF8C00; }
     </style>
     """, unsafe_allow_value=True)
 
-st.title("🛡️ Item Safety Verified")
-st.write("Scan successful. Your item is marked as **Present**.")
-
-# Record the scan
-current_time = datetime.now().strftime("%I:%M %p")
-st.success(f"Verified at {current_time}")
+st.title("🛡️ Item Safety Check")
+st.write("Scan confirmed. Your items are currently with you.")
 
 # Timer Logic
 st.divider()
-st.subheader("⏰ Next Check-in")
-st.write("To ensure your belongings stay with you, please re-scan in:")
+st.subheader("⏰ Next check-in in:")
+placeholder = st.empty()
 
-# A 30-minute countdown for your commute
-countdown_placeholder = st.empty()
+# 30 Minute Timer
 for i in range(1800, 0, -1):
     mins, secs = divmod(i, 60)
-    countdown_placeholder.metric("Time Remaining", f"{mins:02d}:{secs:02d}")
+    placeholder.metric("Safe Window", f"{mins:02d}:{secs:02d}")
     time.sleep(1)
-    if i == 1:
-        st.error("⚠️ ALERT: Item not scanned in time! Check your surroundings.")
