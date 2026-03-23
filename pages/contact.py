@@ -1,7 +1,6 @@
 import streamlit as st
 import smtplib
 from email.message import EmailMessage
-import imghdr # To identify the image type
 
 st.set_page_config(page_title="Contact Owner", page_icon="📸", layout="centered")
 
@@ -23,7 +22,6 @@ with st.form("pro_contact_form", clear_on_submit=True):
     st.divider()
     st.subheader("2. Item Details")
     
-    # NEW: Image Upload Field
     uploaded_file = st.file_uploader("Upload a photo of the item", type=["jpg", "png", "jpeg"])
     
     details = st.text_area("Message for the owner", placeholder="Describe the location...")
@@ -35,7 +33,6 @@ with st.form("pro_contact_form", clear_on_submit=True):
             st.error("Please fill in the required name and contact info.")
         else:
             try:
-                # Setup the Email
                 msg = EmailMessage()
                 msg['Subject'] = f"🚨 ITEM FOUND: Photo attached from {name}"
                 msg['To'] = target_email
@@ -47,14 +44,21 @@ with st.form("pro_contact_form", clear_on_submit=True):
                 body += "Check the attachment for the photo!"
                 msg.set_content(body)
 
-                # ATTACH THE IMAGE
+                # NEW STABLE ATTACHMENT LOGIC
                 if uploaded_file is not None:
                     file_data = uploaded_file.read()
-                    file_type = imghdr.what(None, h=file_data)
                     file_name = uploaded_file.name
-                    msg.add_attachment(file_data, maintype='image', subtype=file_type, filename=file_name)
+                    # Automatically detects subtype based on the file extension
+                    file_extension = file_name.split('.')[-1].lower()
+                    if file_extension == 'jpg': file_extension = 'jpeg'
+                    
+                    msg.add_attachment(
+                        file_data, 
+                        maintype='image', 
+                        subtype=file_extension, 
+                        filename=file_name
+                    )
 
-                # Send via Gmail SMTP
                 server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
                 server.login("hanshhilar705@gmail.com", st.secrets["EMAIL_PASSWORD"]) 
                 server.send_message(msg)
@@ -64,4 +68,4 @@ with st.form("pro_contact_form", clear_on_submit=True):
                 st.balloons()
                 st.snow()
             except Exception as e:
-                st.error("Error: Make sure your 'EMAIL_PASSWORD' is set in Streamlit Secrets.")
+                st.error(f"Error: {e}")
