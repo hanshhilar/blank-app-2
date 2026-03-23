@@ -1,5 +1,5 @@
 streamlit
 qrcode[pil]
-opencv-python-headless
-qreader
+pillow
 qrcode
+qreader
