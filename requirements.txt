@@ -1,5 +1,2 @@
 streamlit
 qrcode[pil]
-qrcode
-pillow
-pyzbar

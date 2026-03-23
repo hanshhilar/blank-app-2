@@ -1,76 +1,73 @@
 import streamlit as st
-from PIL import Image
-from pyzbar.pyzbar import decode
 import qrcode
 from io import BytesIO
+import time
 
 st.set_page_config(page_title="Smart Travel Manager", layout="centered")
 
 st.title("🧳 Smart Travel Manager")
 
-# 1. State Management
+# 1. Initialize the checklist in Session State so it stays during refreshes
 if 'scanned_items' not in st.session_state:
     st.session_state.scanned_items = {
-        "Passport": False, 
-        "Laptop": False, 
+        "Passport": False,
+        "Laptop": False,
         "Charger": False
     }
 
-# 2. THE SCANNER
-st.subheader("📷 Scan Item Tag")
-img_file = st.camera_input("Take a photo of the QR code")
+# 2. THE SCANNER LOGIC (Reads the URL: .../travel?check=ItemName)
+query_params = st.query_params
+check_item = query_params.get("check")
 
-if img_file:
-    try:
-        # Load image with Pillow
-        img = Image.open(img_file)
-        
-        # Decode QR using pyzbar
-        decoded_list = decode(img)
-        
-        if not decoded_list:
-            st.warning("No QR code detected. Try holding it steady and make sure there's enough light!")
-        else:
-            for obj in decoded_list:
-                data = obj.data.decode("utf-8")
-                if "?check=" in data:
-                    item_name = data.split("?check=")[-1].strip().capitalize()
-                    
-                    if item_name in st.session_state.scanned_items:
-                        st.session_state.scanned_items[item_name] = True
-                        st.success(f"✅ {item_name} Scanned!")
-                        st.balloons()
-                    else:
-                        st.error(f"'{item_name}' isn't on your list.")
-    except ImportError:
-        st.error("The scanner library is having trouble on this server. Please use the URL links for the demo!")
-    except Exception as e:
-        st.error(f"Error: {e}")
+if check_item:
+    item_to_tick = check_item.strip().capitalize()
+    if item_to_tick in st.session_state.scanned_items:
+        if not st.session_state.scanned_items[item_to_tick]:
+            st.session_state.scanned_items[item_to_tick] = True
+            st.success(f"✅ {item_to_tick} verified via QR!")
+            time.sleep(1)
+            # Clear the URL parameter so it doesn't keep "scanning" on refresh
+            st.query_params.clear()
+            st.rerun()
 
-# 3. CHECKLIST UI
+# 3. Visual Checklist & Progress
+st.subheader("Packing Progress")
+packed_count = sum(st.session_state.scanned_items.values())
+total_count = len(st.session_state.scanned_items)
+st.progress(packed_count / total_count if total_count > 0 else 0)
+
+col1, col2 = st.columns([2, 1])
+with col1:
+    for item, is_packed in st.session_state.scanned_items.items():
+        status = "✅" if is_packed else "❌"
+        st.write(f"{status} **{item}**")
+
+with col2:
+    if st.button("Reset All Ticks"):
+        for key in st.session_state.scanned_items:
+            st.session_state.scanned_items[key] = False
+        st.rerun()
+
+# 4. QR CODE GENERATOR SECTION
 st.divider()
-packed = sum(st.session_state.scanned_items.values())
-total = len(st.session_state.scanned_items)
-st.progress(packed / total if total > 0 else 0)
+st.subheader("➕ Create New Item Tag")
+st.write("Type an item name to add it to your list and generate its unique QR tag.")
 
-cols = st.columns(3)
-for i, (item, status) in enumerate(st.session_state.scanned_items.items()):
-    with cols[i % 3]:
-        st.write(f"{'✅' if status else '❌'} {item}")
+new_item = st.text_input("Item Name (e.g., Camera, Umbrella):")
 
-if st.button("Reset All"):
-    for k in st.session_state.scanned_items: st.session_state.scanned_items[k] = False
-    st.rerun()
-
-# 4. QR GENERATOR
-st.divider()
-st.subheader("➕ Tag Generator")
-new_item = st.text_input("New Item Name:")
-if st.button("Generate QR"):
-    # Replace with your actual app URL
-    link = f"https://blank-app-x4koreu3hsq.streamlit.app/travel?check={new_item}"
-    qr_img = qrcode.make(link)
-    buf = BytesIO()
-    qr_img.save(buf, format="PNG")
-    st.image(buf.getvalue(), width=150)
-    st.caption(f"Scan this to tick: {new_item}")
+if st.button("Generate Packing QR"):
+    if new_item:
+        clean_name = new_item.strip().capitalize()
+        
+        # Add to checklist if it's a new item
+        if clean_name not in st.session_state.scanned_items:
+            st.session_state.scanned_items[clean_name] = False
+        
+        # USE YOUR ACTUAL APP URL HERE
+        base_url = "https://blank-app-x4koreu3hsq.streamlit.app/travel" 
+        final_qr_link = f"{base_url}?check={clean_name}"
+        
+        # Generate QR Image
+        qr = qrcode.make(final_qr_link)
+        buf = BytesIO()
+        qr.save(buf, format="PNG")
